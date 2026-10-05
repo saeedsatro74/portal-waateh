@@ -1,0 +1,6 @@
+{
+  "name": "پرتال یکپارچه سامانه‌های واته",
+  "description": "پرتال یکپارچه سازمانی سامانه‌های واته (Waateh Integrated Systems Portal) با چیدمان ۲×۲، پیش‌نمایش مقیاس‌پذیر دسکتاپ و همگام‌سازی ابری سوپابیس",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
