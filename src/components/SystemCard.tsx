@@ -21,6 +21,7 @@ interface SystemCardProps {
   onOpenFullscreen: (system: WaatehSystem) => void;
   onOpenEdit: (system: WaatehSystem) => void;
   onSaveUrl: (id: string, url: string) => Promise<void>;
+  isAdmin?: boolean;
 }
 
 export const SystemCard: React.FC<SystemCardProps> = ({
@@ -29,6 +30,7 @@ export const SystemCard: React.FC<SystemCardProps> = ({
   onOpenFullscreen,
   onOpenEdit,
   onSaveUrl,
+  isAdmin = false,
 }) => {
   const [isInteractiveScroll, setIsInteractiveScroll] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
@@ -96,8 +98,8 @@ export const SystemCard: React.FC<SystemCardProps> = ({
     setUseSimulatedView((prev) => !prev);
   };
 
-  // If no URL, render Inline Setup Card directly
-  if (!system.url) {
+  // If no URL and is Admin, render Inline Setup Card directly
+  if (!system.url && isAdmin) {
     return (
       <div className="w-full h-full min-h-[380px] flex flex-col bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
         <InlineSetupCard
@@ -191,15 +193,17 @@ export const SystemCard: React.FC<SystemCardProps> = ({
             <ExternalLink className="w-3.5 h-3.5" />
           </button>
 
-          {/* Edit pencil button (placed prominently on top-left of each box as requested) */}
-          <button
-            type="button"
-            onClick={handleEditClick}
-            title="ویرایش مشخصات سامانه و آدرس"
-            className="p-1.5 rounded-lg bg-white border border-amber-300/80 text-amber-700 hover:bg-amber-50 text-xs transition cursor-pointer font-medium"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
+          {/* Edit pencil button (shown only in admin mode) */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={handleEditClick}
+              title="ویرایش مشخصات سامانه و آدرس"
+              className="p-1.5 rounded-lg bg-white border border-amber-300/80 text-amber-700 hover:bg-amber-50 text-xs transition cursor-pointer font-medium"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           {/* Internal Fullscreen Modal Viewer */}
           <button

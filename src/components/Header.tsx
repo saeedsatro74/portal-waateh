@@ -5,16 +5,12 @@ import {
   Database, 
   Maximize, 
   Minimize, 
-  SlidersHorizontal, 
   Calendar, 
   Clock, 
   Radio, 
   ShieldCheck, 
-  UserCheck, 
-  HelpCircle,
-  Sparkles,
-  Building,
-  Plus
+  Lock,
+  ExternalLink
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -22,8 +18,7 @@ interface HeaderProps {
   onSearchChange: (q: string) => void;
   isSupabaseConnected: boolean;
   onOpenSupabaseModal: () => void;
-  onOpenManageModal: () => void;
-  onOpenAddModal: () => void;
+  onGoToAdmin: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,8 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   isSupabaseConnected,
   onOpenSupabaseModal,
-  onOpenManageModal,
-  onOpenAddModal,
+  onGoToAdmin,
 }) => {
   const [shamsiDate, setShamsiDate] = useState('');
   const [time, setTime] = useState({ hours: '00', minutes: '00', seconds: '00' });
@@ -172,24 +166,15 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
-          {/* Add System Button */}
+          {/* Admin Panel Access Button */}
           <button
             type="button"
-            onClick={onOpenAddModal}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>افزودن سایت</span>
-          </button>
-
-          {/* Manage Systems Button */}
-          <button
-            type="button"
-            onClick={onOpenManageModal}
+            onClick={onGoToAdmin}
+            title="ورود به پنل مدیریت سامانه‌ها و پیکربندی سوپابیس"
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs cursor-pointer"
           >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />
-            <span>مدیریت سامانه‌ها</span>
+            <Lock className="w-3.5 h-3.5 text-amber-400" />
+            <span>پنل ادمین</span>
           </button>
 
           {/* Fullscreen Toggle Button */}

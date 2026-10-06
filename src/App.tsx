@@ -16,6 +16,7 @@ import { SystemCard } from './components/SystemCard';
 import { FullscreenModalViewer } from './components/FullscreenModalViewer';
 import { ManageSystemsModal } from './components/ManageSystemsModal';
 import { SupabaseModal } from './components/SupabaseModal';
+import { AdminPanel } from './components/AdminPanel';
 import { 
   Grid2X2, 
   Square, 
@@ -27,10 +28,20 @@ import {
   Info,
   CheckCircle2,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
 
 export function App() {
+  const [viewMode, setViewMode] = useState<'portal' | 'admin'>(() => {
+    if (typeof window !== 'undefined') {
+      if (window.location.hash === '#admin' || window.location.search.includes('view=admin')) {
+        return 'admin';
+      }
+    }
+    return 'portal';
+  });
+
   const [systems, setSystems] = useState<WaatehSystem[]>(INITIAL_SYSTEMS);
   const [aspectRatio, setAspectRatio] = useState<GridAspectRatio>('4:3');
   const [selectedCategory, setSelectedCategory] = useState<string>('همه');
@@ -44,6 +55,19 @@ export function App() {
   const [manageModalTab, setManageModalTab] = useState<'list' | 'form'>('list');
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
   const [editingSystem, setEditingSystem] = useState<WaatehSystem | null>(null);
+
+  // Sync hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#admin') {
+        setViewMode('admin');
+      } else {
+        setViewMode('portal');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Load systems on mount
   const loadData = async () => {
@@ -157,6 +181,31 @@ export function App() {
     }
   };
 
+  const handleGoToAdmin = () => {
+    setViewMode('admin');
+    window.location.hash = 'admin';
+  };
+
+  const handleBackToPortal = () => {
+    setViewMode('portal');
+    window.location.hash = '';
+  };
+
+  // If in Admin Console mode, render AdminPanel directly
+  if (viewMode === 'admin') {
+    return (
+      <AdminPanel
+        systems={systems}
+        onBackToPortal={handleBackToPortal}
+        onSaveSystem={handleSaveSystem}
+        onDeleteSystem={handleDeleteSystem}
+        onReorderSystems={handleReorderSystems}
+        onResetToDefaults={handleResetToDefaults}
+        onRefreshData={loadData}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white text-slate-800 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900">
       {/* 1. Header */}
@@ -165,29 +214,15 @@ export function App() {
         onSearchChange={setSearchQuery}
         isSupabaseConnected={isSupabaseConnected}
         onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
-        onOpenManageModal={() => {
-          setEditingSystem(null);
-          setManageModalTab('list');
-          setIsManageModalOpen(true);
-        }}
-        onOpenAddModal={handleOpenAddModal}
+        onGoToAdmin={handleGoToAdmin}
       />
 
       {/* 2. Executive Toolbar: Aspect Ratio Switcher & Filters */}
       <section className="bg-slate-50/70 border-b border-slate-200/80">
         <div className="max-w-[1720px] mx-auto px-4 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
           
-          {/* Categories Pill Bar & Add button */}
-          <div className="flex items-center gap-2 overflow-x-auto py-1">
-            <button
-              type="button"
-              onClick={handleOpenAddModal}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>افزودن سامانه جدید</span>
-            </button>
-
+          {/* Categories Pill Bar */}
+          <div className="flex items-center gap-1.5 overflow-x-auto py-1">
             <span className="text-xs font-bold text-slate-500 ml-1 shrink-0">دسته‌بندی:</span>
             {categories.map((cat) => (
               <button
@@ -302,6 +337,7 @@ export function App() {
                   onOpenFullscreen={(sys) => setFullscreenSystem(sys)}
                   onOpenEdit={(sys) => handleOpenEdit(sys)}
                   onSaveUrl={handleSaveUrl}
+                  isAdmin={false}
                 />
               </div>
             ))}
