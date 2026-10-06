@@ -169,7 +169,7 @@ export const FullscreenModalViewer: React.FC<FullscreenModalViewerProps> = ({
         ) : (
           <iframe
             key={iframeKey}
-            src={system.url}
+            src={system.url || undefined}
             title={system.title}
             className="w-full h-full border-0 bg-white"
             sandbox="allow-same-origin allow-scripts allow-forms allow-popups"

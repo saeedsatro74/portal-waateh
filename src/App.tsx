@@ -277,7 +277,6 @@ export function App() {
         onSearchChange={setSearchQuery}
         isSupabaseConnected={isSupabaseConnected}
         onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
-        onGoToAdmin={handleGoToAdmin}
       />
 
       {/* 2. Executive Toolbar: Aspect Ratio Switcher & Filters */}

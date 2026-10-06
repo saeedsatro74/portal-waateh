@@ -241,7 +241,7 @@ export const SystemCard: React.FC<SystemCardProps> = ({
             transform: `scale(${scale})`,
           }}
         >
-          {useSimulatedView ? (
+          {useSimulatedView || !system.url ? (
             <SimulatedSystemDashboard
               systemCode={system.system_code}
               title={system.title}
@@ -249,7 +249,7 @@ export const SystemCard: React.FC<SystemCardProps> = ({
           ) : (
             <iframe
               key={iframeKey}
-              src={system.url}
+              src={system.url || undefined}
               title={system.title}
               onLoad={() => setIframeLoading(false)}
               className="w-full h-full border-0 bg-white"
