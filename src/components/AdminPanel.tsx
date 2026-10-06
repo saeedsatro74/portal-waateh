@@ -29,7 +29,8 @@ import {
   Radio,
   Lock,
   Search,
-  Eye
+  Eye,
+  LogOut
 } from 'lucide-react';
 import { 
   getStoredSupabaseConfig, 
@@ -41,6 +42,7 @@ import { syncAllToSupabase } from '../services/systemsService';
 interface AdminPanelProps {
   systems: WaatehSystem[];
   onBackToPortal: () => void;
+  onLogout: () => void;
   onSaveSystem: (system: Partial<WaatehSystem> & { title: string }) => Promise<void>;
   onDeleteSystem: (id: string) => Promise<void>;
   onReorderSystems: (systems: WaatehSystem[]) => Promise<void>;
@@ -71,6 +73,7 @@ const PRESET_COLORS = [
 export const AdminPanel: React.FC<AdminPanelProps> = ({
   systems,
   onBackToPortal,
+  onLogout,
   onSaveSystem,
   onDeleteSystem,
   onReorderSystems,
@@ -326,7 +329,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-sm cursor-pointer"
             >
               <ArrowRight className="w-4 h-4" />
-              <span>مشاهده پرتال اصلی (خروج از ادمین)</span>
+              <span>مشاهده پرتال عمومی</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 text-xs font-bold transition border border-slate-700 cursor-pointer"
+              title="خروج از حساب مدیریت"
+            >
+              <LogOut className="w-4 h-4 text-rose-400" />
+              <span>خروج</span>
             </button>
           </div>
         </div>

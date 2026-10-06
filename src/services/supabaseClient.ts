@@ -54,13 +54,53 @@ export function getSupabaseClient(): SupabaseClient | null {
   }
 }
 
+export async function signInWithEmail(email: string, password: string) {
+  const client = getSupabaseClient();
+  if (!client) {
+    throw new Error('دیتابیس سوپابیس متصل نیست. لطفاً مقادیر VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY را تنظیم کنید.');
+  }
+  const { data, error } = await client.auth.signInWithPassword({
+    email: email.trim(),
+    password: password.trim(),
+  });
+  if (error) {
+    throw error;
+  }
+  return data;
+}
+
+export async function signOutAdmin() {
+  const client = getSupabaseClient();
+  if (client) {
+    await client.auth.signOut();
+  }
+}
+
+export async function getAdminSession() {
+  const client = getSupabaseClient();
+  if (!client) return null;
+  const { data } = await client.auth.getSession();
+  return data.session;
+}
+
+export function onAdminAuthStateChange(callback: (session: any) => void) {
+  const client = getSupabaseClient();
+  if (!client) return null;
+  const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+    callback(session);
+  });
+  return () => {
+    subscription.unsubscribe();
+  };
+}
+
 export const SUPABASE_SQL_SCRIPT = `-- ========================================================
 -- ۱. حذف جدول قبلی در صورت وجود (Drop Old Table)
 -- ========================================================
 DROP TABLE IF EXISTS public.systems CASCADE;
 
 -- ========================================================
--- ۲. ایجاد جدول جدید سامانه‌های واته (Create Clean Systems Table)
+-- ۲. ایجاد جدول جدید سامانه‌ها (Create Clean Systems Table)
 -- ========================================================
 CREATE TABLE public.systems (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -78,23 +118,46 @@ CREATE TABLE public.systems (
 );
 
 -- ========================================================
--- ۳. فعال‌سازی امنیت سطح سطر (RLS) و پالیسی خواندن/نوشتن
+-- ۳. امنیت در سطح سطر (RLS) - فقط ادمین لاگین‌شده مجاز به نوشتن است
 -- ========================================================
 ALTER TABLE public.systems ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "دسترسی آزاد سامانه‌های پرتال واته" ON public.systems;
-CREATE POLICY "دسترسی آزاد سامانه‌های پرتال واته" ON public.systems
-  FOR ALL
+-- الف: اجازه مشاهده عمومی (هم کاربران مهمان و هم لاگین‌شده)
+DROP POLICY IF EXISTS "مشاهده عمومی سامانه‌ها" ON public.systems;
+CREATE POLICY "مشاهده عمومی سامانه‌ها" ON public.systems
+  FOR SELECT
+  TO public
+  USING (true);
+
+-- ب: اجازه درج فقط برای کاربران احرازهویت‌شده در Supabase Auth
+DROP POLICY IF EXISTS "فقط ادمین لاگین‌شده می‌تواند درج کند" ON public.systems;
+CREATE POLICY "فقط ادمین لاگین‌شده می‌تواند درج کند" ON public.systems
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (true);
+
+-- ج: اجازه ویرایش فقط برای کاربران احرازهویت‌شده
+DROP POLICY IF EXISTS "فقط ادمین لاگین‌شده می‌تواند ویرایش کند" ON public.systems;
+CREATE POLICY "فقط ادمین لاگین‌شده می‌تواند ویرایش کند" ON public.systems
+  FOR UPDATE
+  TO authenticated
   USING (true)
   WITH CHECK (true);
 
+-- د: اجازه حذف فقط برای کاربران احرازهویت‌شده
+DROP POLICY IF EXISTS "فقط ادمین لاگین‌شده می‌تواند حذف کند" ON public.systems;
+CREATE POLICY "فقط ادمین لاگین‌شده می‌تواند حذف کند" ON public.systems
+  FOR DELETE
+  TO authenticated
+  USING (true);
+
 -- ========================================================
--- ۴. فعال‌سازی تغییرات زنده (Real-time Broadcast)
+-- ۴. فعال‌سازی تغییرات زنده بلادرنگ (Real-time Broadcast)
 -- ========================================================
 ALTER PUBLICATION supabase_realtime ADD TABLE public.systems;
 
 -- ========================================================
--- ۵. درج ۴ سامانه اولیه پیش‌فرض سازمان واته
+-- ۵. درج داده‌های ۴ سامانه اولیه پیش‌فرض
 -- ========================================================
 INSERT INTO public.systems (id, title, subtitle, url, category, icon, accent_color, sort_order, system_code)
 VALUES 

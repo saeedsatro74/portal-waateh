@@ -10,37 +10,44 @@ import {
   subscribeToRealtimeChanges,
   saveLocalCachedSystems
 } from './services/systemsService';
-import { getStoredSupabaseConfig } from './services/supabaseClient';
+import { 
+  getStoredSupabaseConfig, 
+  getAdminSession, 
+  signOutAdmin, 
+  onAdminAuthStateChange 
+} from './services/supabaseClient';
 import { Header } from './components/Header';
 import { SystemCard } from './components/SystemCard';
 import { FullscreenModalViewer } from './components/FullscreenModalViewer';
 import { ManageSystemsModal } from './components/ManageSystemsModal';
 import { SupabaseModal } from './components/SupabaseModal';
 import { AdminPanel } from './components/AdminPanel';
+import { LoginPage } from './components/LoginPage';
 import { 
   Grid2X2, 
   Square, 
   RectangleHorizontal, 
-  Sliders, 
   Building2, 
-  Layers, 
-  Plus, 
-  Info,
-  CheckCircle2,
-  RefreshCw,
-  Sparkles,
-  Lock
+  RefreshCw
 } from 'lucide-react';
 
+const checkIsAdminPath = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
+  const search = window.location.search.toLowerCase();
+  return (
+    path.startsWith('/admin') ||
+    hash === '#admin' ||
+    hash.startsWith('#/admin') ||
+    search.includes('view=admin')
+  );
+};
+
 export function App() {
-  const [viewMode, setViewMode] = useState<'portal' | 'admin'>(() => {
-    if (typeof window !== 'undefined') {
-      if (window.location.hash === '#admin' || window.location.search.includes('view=admin')) {
-        return 'admin';
-      }
-    }
-    return 'portal';
-  });
+  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(checkIsAdminPath);
+  const [adminSession, setAdminSession] = useState<any>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
 
   const [systems, setSystems] = useState<WaatehSystem[]>(INITIAL_SYSTEMS);
   const [aspectRatio, setAspectRatio] = useState<GridAspectRatio>('4:3');
@@ -56,17 +63,37 @@ export function App() {
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
   const [editingSystem, setEditingSystem] = useState<WaatehSystem | null>(null);
 
-  // Sync hash changes
+  // Sync Supabase Auth Session and URL path changes
   useEffect(() => {
-    const handleHashChange = () => {
-      if (window.location.hash === '#admin') {
-        setViewMode('admin');
-      } else {
-        setViewMode('portal');
+    const checkAuth = async () => {
+      try {
+        const session = await getAdminSession();
+        setAdminSession(session);
+      } catch (err) {
+        console.warn('Error checking Supabase auth session:', err);
+      } finally {
+        setIsCheckingAuth(false);
       }
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+
+    checkAuth();
+
+    const unsubscribeAuth = onAdminAuthStateChange((session) => {
+      setAdminSession(session);
+    });
+
+    const handleLocationChange = () => {
+      setIsAdminRoute(checkIsAdminPath());
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+
+    return () => {
+      if (unsubscribeAuth) unsubscribeAuth();
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
   }, []);
 
   // Load systems on mount
@@ -182,21 +209,57 @@ export function App() {
   };
 
   const handleGoToAdmin = () => {
-    setViewMode('admin');
-    window.location.hash = 'admin';
+    try {
+      window.history.pushState({}, '', '/admin');
+    } catch {
+      window.location.hash = 'admin';
+    }
+    setIsAdminRoute(true);
   };
 
   const handleBackToPortal = () => {
-    setViewMode('portal');
-    window.location.hash = '';
+    try {
+      window.history.pushState({}, '', '/');
+    } catch {
+      window.location.hash = '';
+    }
+    setIsAdminRoute(false);
   };
 
-  // If in Admin Console mode, render AdminPanel directly
-  if (viewMode === 'admin') {
+  const handleAdminLogout = async () => {
+    await signOutAdmin();
+    setAdminSession(null);
+  };
+
+  // If on /admin route: require Supabase Auth
+  if (isAdminRoute) {
+    if (isCheckingAuth) {
+      return (
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-300 gap-3">
+          <RefreshCw className="w-8 h-8 animate-spin text-amber-500" />
+          <p className="text-xs font-mono">در حال بررسی نشست کاربری با سوپابیس...</p>
+        </div>
+      );
+    }
+
+    // If not logged in, show LoginPage
+    if (!adminSession) {
+      return (
+        <LoginPage
+          onSuccess={() => {
+            getAdminSession().then(setAdminSession);
+          }}
+          onBackToPortal={handleBackToPortal}
+        />
+      );
+    }
+
+    // If logged in, show AdminPanel
     return (
       <AdminPanel
         systems={systems}
         onBackToPortal={handleBackToPortal}
+        onLogout={handleAdminLogout}
         onSaveSystem={handleSaveSystem}
         onDeleteSystem={handleDeleteSystem}
         onReorderSystems={handleReorderSystems}
