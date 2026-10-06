@@ -3,17 +3,9 @@ import { WaatehSystem, GridAspectRatio } from '../types';
 import { InlineSetupCard, getSystemIcon } from './InlineSetupCard';
 import { SimulatedSystemDashboard } from './SimulatedSystemDashboard';
 import { 
-  ExternalLink, 
-  Maximize2, 
-  RotateCw, 
   Pencil, 
-  MousePointer, 
-  Globe, 
-  Sparkles,
-  Layers,
-  ShieldCheck,
-  LayoutDashboard,
-  GripVertical
+  GripVertical,
+  Maximize2
 } from 'lucide-react';
 
 interface SystemCardProps {
@@ -33,11 +25,6 @@ export const SystemCard: React.FC<SystemCardProps> = ({
   onSaveUrl,
   isAdmin = false,
 }) => {
-  const [isInteractiveScroll, setIsInteractiveScroll] = useState(false);
-  const [iframeKey, setIframeKey] = useState(0);
-  const [useSimulatedView, setUseSimulatedView] = useState(false);
-  const [iframeLoading, setIframeLoading] = useState(true);
-
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [scaledHeight, setScaledHeight] = useState(800);
@@ -71,32 +58,9 @@ export const SystemCard: React.FC<SystemCardProps> = ({
     return () => observer.disconnect();
   }, [aspectRatio]);
 
-  const handleRefresh = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIframeLoading(true);
-    setIframeKey((prev) => prev + 1);
-  };
-
-  const handleOpenExternal = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (system.url) {
-      window.open(system.url, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  const handleToggleScroll = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsInteractiveScroll((prev) => !prev);
-  };
-
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onOpenEdit(system);
-  };
-
-  const handleToggleSimulated = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setUseSimulatedView((prev) => !prev);
   };
 
   // If no URL and is Admin, render Inline Setup Card directly
@@ -150,58 +114,9 @@ export const SystemCard: React.FC<SystemCardProps> = ({
           </div>
         </div>
 
-        {/* Left side: Action Buttons (Edit Pencil, Scroll Mode, Refresh, External, Fullscreen) */}
-        <div className="flex items-center gap-1 shrink-0">
-          {/* Internal Simulation Toggle */}
-          <button
-            type="button"
-            onClick={handleToggleSimulated}
-            title={useSimulatedView ? "نمایش آیفریم اصلی سایت" : "نمایش داشبورد داخلی سامانه"}
-            className={`p-1.5 rounded-lg text-xs transition cursor-pointer border ${
-              useSimulatedView
-                ? 'bg-amber-100 text-amber-900 border-amber-300'
-                : 'bg-white text-slate-600 hover:text-slate-900 border-slate-200 hover:bg-slate-100'
-            }`}
-          >
-            <LayoutDashboard className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Interactive Scroll Toggle */}
-          <button
-            type="button"
-            onClick={handleToggleScroll}
-            title={isInteractiveScroll ? 'غیرفعال‌سازی اسکرول مستقیم (حالت کلیک پرتال)' : 'فعال‌سازی اسکرول مستقیم داخل پیش‌نمایش'}
-            className={`p-1.5 rounded-lg text-xs transition cursor-pointer border ${
-              isInteractiveScroll 
-                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' 
-                : 'bg-white text-slate-600 hover:text-slate-900 border-slate-200 hover:bg-slate-100'
-            }`}
-          >
-            <MousePointer className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Refresh preview */}
-          <button
-            type="button"
-            onClick={handleRefresh}
-            title="بازنشانی و رفرش پیش‌نمایش"
-            className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs transition cursor-pointer"
-          >
-            <RotateCw className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Open External Tab */}
-          <button
-            type="button"
-            onClick={handleOpenExternal}
-            title="باز کردن در برگه جدید مرورگر"
-            className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs transition cursor-pointer"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Edit pencil button (shown only in admin mode) */}
-          {isAdmin && (
+        {/* Left side: Only admin edit button if in admin mode */}
+        {isAdmin && (
+          <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={handleEditClick}
@@ -210,34 +125,15 @@ export const SystemCard: React.FC<SystemCardProps> = ({
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
-          )}
-
-          {/* Internal Fullscreen Modal Viewer */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenFullscreen(system);
-            }}
-            title="نمای تمام‌صفحه پرتال"
-            className="p-1.5 rounded-lg bg-slate-800 text-white hover:bg-slate-900 text-xs transition cursor-pointer shadow-xs"
-          >
-            <Maximize2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Main Viewport Container */}
       <div 
         ref={containerRef}
-        onClick={() => {
-          if (!isInteractiveScroll) {
-            onOpenFullscreen(system);
-          }
-        }}
-        className={`flex-1 relative overflow-hidden bg-slate-900 ${
-          isInteractiveScroll ? 'cursor-default' : 'cursor-pointer'
-        }`}
+        onClick={() => onOpenFullscreen(system)}
+        className="flex-1 relative overflow-hidden bg-slate-900 cursor-pointer"
       >
         {/* Virtual Desktop Scaled Wrapper */}
         <div
@@ -248,40 +144,28 @@ export const SystemCard: React.FC<SystemCardProps> = ({
             transform: `scale(${scale})`,
           }}
         >
-          {useSimulatedView || !system.url ? (
+          {system.url ? (
+            <iframe
+              src={system.url}
+              title={system.title}
+              className="w-full h-full border-0 bg-white pointer-events-none"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+            />
+          ) : (
             <SimulatedSystemDashboard
               systemCode={system.system_code}
               title={system.title}
             />
-          ) : (
-            <iframe
-              key={iframeKey}
-              src={system.url || undefined}
-              title={system.title}
-              onLoad={() => setIframeLoading(false)}
-              className="w-full h-full border-0 bg-white"
-              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-            />
           )}
         </div>
 
-        {/* Click-through overlay when interactive scroll is OFF */}
-        {!isInteractiveScroll && (
-          <div className="absolute inset-0 bg-transparent z-10 group-hover:bg-slate-900/5 transition-colors flex items-center justify-center pointer-events-auto">
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 text-white text-xs px-3 py-1.5 rounded-full shadow-lg backdrop-blur-xs flex items-center gap-2 pointer-events-none">
-              <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
-              <span>کلیک برای نمایش تمام‌صفحه سامانه</span>
-            </div>
+        {/* Click-through overlay to open fullscreen on click */}
+        <div className="absolute inset-0 bg-transparent z-10 group-hover:bg-slate-900/10 transition-colors flex items-center justify-center pointer-events-auto">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/85 text-white text-xs px-3.5 py-1.5 rounded-full shadow-lg backdrop-blur-xs flex items-center gap-2 pointer-events-none">
+            <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
+            <span>کلیک برای نمایش تمام‌صفحه</span>
           </div>
-        )}
-
-        {/* Notice badge if in interactive scroll mode */}
-        {isInteractiveScroll && (
-          <div className="absolute bottom-2 left-2 z-20 bg-emerald-700/90 text-white text-[10px] px-2.5 py-1 rounded-md shadow flex items-center gap-1.5 backdrop-blur-xs pointer-events-none select-none">
-            <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
-            <span>حالت اسکرول و تعامل مستقیم فعال است</span>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -19,8 +19,6 @@ import {
 import { Header } from './components/Header';
 import { SystemCard } from './components/SystemCard';
 import { FullscreenModalViewer } from './components/FullscreenModalViewer';
-import { ManageSystemsModal } from './components/ManageSystemsModal';
-import { SupabaseModal } from './components/SupabaseModal';
 import { AdminPanel } from './components/AdminPanel';
 import { LoginPage } from './components/LoginPage';
 import { 
@@ -56,10 +54,6 @@ export function App() {
 
   // Modals state
   const [fullscreenSystem, setFullscreenSystem] = useState<WaatehSystem | null>(null);
-  const [isManageModalOpen, setIsManageModalOpen] = useState<boolean>(false);
-  const [manageModalTab, setManageModalTab] = useState<'list' | 'form'>('list');
-  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
-  const [editingSystem, setEditingSystem] = useState<WaatehSystem | null>(null);
 
   // Sync Supabase Auth Session and URL path changes
   useEffect(() => {
@@ -133,17 +127,9 @@ export function App() {
     setSystems(updated);
   };
 
-  // Open Edit Modal for specific system
-  const handleOpenEdit = (system: WaatehSystem) => {
-    setEditingSystem(system);
-    setManageModalTab('form');
-    setIsManageModalOpen(true);
-  };
-
-  const handleOpenAddModal = () => {
-    setEditingSystem(null);
-    setManageModalTab('form');
-    setIsManageModalOpen(true);
+  // Open Edit for specific system
+  const handleOpenEdit = (_system?: WaatehSystem) => {
+    // In public view, editing is disabled and managed via /admin
   };
 
   // CRUD operations
@@ -340,36 +326,10 @@ export function App() {
         </div>
       </footer>
 
-      {/* 5. Modals */}
-      {/* Fullscreen View Modal */}
+      {/* 4. Fullscreen View Modal */}
       <FullscreenModalViewer
         system={fullscreenSystem}
         onClose={() => setFullscreenSystem(null)}
-      />
-
-      {/* Manage Systems CRUD Modal */}
-      <ManageSystemsModal
-        isOpen={isManageModalOpen}
-        onClose={() => {
-          setIsManageModalOpen(false);
-          setEditingSystem(null);
-        }}
-        initialTab={manageModalTab}
-        systems={systems}
-        onSaveSystem={handleSaveSystem}
-        onDeleteSystem={handleDeleteSystem}
-        onReorderSystems={handleReorderSystems}
-        onResetToDefaults={handleResetToDefaults}
-        editingSystem={editingSystem}
-        onClearEditingSystem={() => setEditingSystem(null)}
-      />
-
-      {/* Supabase Connection Modal */}
-      <SupabaseModal
-        isOpen={isSupabaseModalOpen}
-        onClose={() => setIsSupabaseModalOpen(false)}
-        currentSystems={systems}
-        onSynced={loadData}
       />
     </div>
   );
