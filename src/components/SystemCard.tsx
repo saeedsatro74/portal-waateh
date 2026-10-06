@@ -1,16 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { WaatehSystem, GridAspectRatio } from '../types';
+import React, { useRef, useEffect, useState } from 'react';
+import { WaatehSystem } from '../types';
 import { InlineSetupCard, getSystemIcon } from './InlineSetupCard';
 import { SimulatedSystemDashboard } from './SimulatedSystemDashboard';
-import { 
-  Pencil, 
-  GripVertical,
-  Maximize2
-} from 'lucide-react';
+import { Pencil, GripVertical, ExternalLink } from 'lucide-react';
 
 interface SystemCardProps {
   system: WaatehSystem;
-  aspectRatio?: GridAspectRatio;
   onOpenFullscreen: (system: WaatehSystem) => void;
   onOpenEdit: (system: WaatehSystem) => void;
   onSaveUrl: (id: string, url: string) => Promise<void>;
@@ -19,20 +14,18 @@ interface SystemCardProps {
 
 export const SystemCard: React.FC<SystemCardProps> = ({
   system,
-  aspectRatio,
   onOpenFullscreen,
   onOpenEdit,
   onSaveUrl,
   isAdmin = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  const [scaledHeight, setScaledHeight] = useState(800);
+  const [scale, setScale] = useState(0.4);
+  const [scaledHeight, setScaledHeight] = useState(900);
 
-  // Virtual desktop width
+  // Virtual desktop standard width for scaled preview
   const VIRTUAL_WIDTH = 1280;
 
-  // Calculate transform scale based on container size
   useEffect(() => {
     const updateScale = () => {
       if (!containerRef.current) return;
@@ -56,7 +49,7 @@ export const SystemCard: React.FC<SystemCardProps> = ({
     }
 
     return () => observer.disconnect();
-  }, [aspectRatio]);
+  }, []);
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -66,7 +59,7 @@ export const SystemCard: React.FC<SystemCardProps> = ({
   // If no URL and is Admin, render Inline Setup Card directly
   if (!system.url && isAdmin) {
     return (
-      <div className="w-full h-full min-h-[380px] flex flex-col bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+      <div className="w-full h-full min-h-[460px] flex flex-col bg-white rounded-3xl border border-slate-200/90 shadow-md overflow-hidden">
         <InlineSetupCard
           system={system}
           onSaveUrl={(url) => onSaveUrl(system.id, url)}
@@ -77,63 +70,17 @@ export const SystemCard: React.FC<SystemCardProps> = ({
   }
 
   return (
-    <div className="w-full h-full min-h-[460px] xl:min-h-[520px] 2xl:min-h-[580px] flex flex-col bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden hover:shadow-md transition-shadow group relative">
-      {/* Top Header Bar of the Box */}
-      <div className="px-4 py-2.5 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between z-20 select-none">
-        {/* Right side: Drag Handle, Icon, Title & Category */}
-        <div className="flex items-center gap-2 min-w-0">
-          <div 
-            className="p-1 -mr-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 cursor-grab active:cursor-grabbing transition shrink-0"
-            title="برای جابجایی جایگاه سامانه با موس بکشید و رها کنید (Drag & Drop)"
-          >
-            <GripVertical className="w-4 h-4" />
-          </div>
-          <div 
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-xs"
-            style={{ 
-              backgroundColor: `${system.accent_color}18`, 
-              color: system.accent_color || '#b45309',
-              borderColor: `${system.accent_color}30`
-            }}
-          >
-            {getSystemIcon(system.icon, 'w-4 h-4')}
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h4 className="text-xs font-bold text-slate-900 truncate">
-                {system.title}
-              </h4>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-700 font-medium shrink-0">
-                {system.category}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono truncate" dir="ltr">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="truncate">{system.url}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Left side: Only admin edit button if in admin mode */}
-        {isAdmin && (
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={handleEditClick}
-              title="ویرایش مشخصات سامانه و آدرس"
-              className="p-1.5 rounded-lg bg-white border border-amber-300/80 text-amber-700 hover:bg-amber-50 text-xs transition cursor-pointer font-medium"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Main Viewport Container */}
+    <div 
+      onClick={() => onOpenFullscreen(system)}
+      className="w-full h-full min-h-[460px] sm:min-h-[500px] flex flex-col bg-slate-900 rounded-3xl border border-slate-200/80 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden group cursor-pointer relative"
+      style={{
+        boxShadow: '0 10px 30px -10px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04)',
+      }}
+    >
+      {/* Top Preview Area (Fills the upper 78% of the card) */}
       <div 
         ref={containerRef}
-        onClick={() => onOpenFullscreen(system)}
-        className="flex-1 relative overflow-hidden bg-slate-900 cursor-pointer"
+        className="flex-1 w-full relative overflow-hidden bg-slate-950"
       >
         {/* Virtual Desktop Scaled Wrapper */}
         <div
@@ -159,11 +106,62 @@ export const SystemCard: React.FC<SystemCardProps> = ({
           )}
         </div>
 
-        {/* Click-through overlay to open fullscreen on click */}
-        <div className="absolute inset-0 bg-transparent z-10 group-hover:bg-slate-900/10 transition-colors flex items-center justify-center pointer-events-auto">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/85 text-white text-xs px-3.5 py-1.5 rounded-full shadow-lg backdrop-blur-xs flex items-center gap-2 pointer-events-none">
-            <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
-            <span>کلیک برای نمایش تمام‌صفحه</span>
+        {/* Hover Highlight Overlay */}
+        <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/15 transition-colors duration-300 flex items-center justify-center pointer-events-none">
+          <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100 bg-slate-900/90 text-white text-xs px-4 py-2 rounded-full shadow-xl backdrop-blur-xs flex items-center gap-2">
+            <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
+            <span>مشاهده سامانه</span>
+          </div>
+        </div>
+
+        {/* Grip Handle and Admin Edit on top corners */}
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+          <div 
+            className="p-1.5 rounded-lg bg-black/40 backdrop-blur-md text-white/80 cursor-grab active:cursor-grabbing hover:text-white hover:bg-black/60 transition"
+            title="برای جابجایی جایگاه با موس بکشید (Drag & Drop)"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="w-3.5 h-3.5" />
+          </div>
+
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={handleEditClick}
+              title="ویرایش سامانه"
+              className="p-1.5 rounded-lg bg-amber-600/90 hover:bg-amber-600 text-white transition shadow"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Floating White Info Card (Exactly as in Reference Design) */}
+      <div className="p-4 sm:p-5 bg-white border-t border-slate-100 select-none z-10">
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs"
+            style={{ 
+              backgroundColor: `${system.accent_color}14`, 
+              color: system.accent_color || '#b45309',
+              borderColor: `${system.accent_color}25`
+            }}
+          >
+            {getSystemIcon(system.icon, 'w-5 h-5')}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-bold text-slate-900 truncate tracking-tight group-hover:text-amber-700 transition-colors">
+              {system.title}
+            </h3>
+            <p className="text-xs text-slate-400 truncate mt-0.5 font-medium" dir="ltr">
+              {system.url || system.subtitle || 'آماده‌سازی دسترسی'}
+            </p>
+          </div>
+
+          <div className="shrink-0 flex items-center">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="سامانه متصل"></span>
           </div>
         </div>
       </div>

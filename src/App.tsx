@@ -16,15 +16,11 @@ import {
   signOutAdmin, 
   onAdminAuthStateChange 
 } from './services/supabaseClient';
-import { Header } from './components/Header';
 import { SystemCard } from './components/SystemCard';
 import { FullscreenModalViewer } from './components/FullscreenModalViewer';
 import { AdminPanel } from './components/AdminPanel';
 import { LoginPage } from './components/LoginPage';
-import { 
-  Building2, 
-  RefreshCw
-} from 'lucide-react';
+import { Building2, RefreshCw } from 'lucide-react';
 
 const checkIsAdminPath = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -46,7 +42,7 @@ export function App() {
 
   const [systems, setSystems] = useState<WaatehSystem[]>(INITIAL_SYSTEMS);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(false);
+  const [, setIsSupabaseConnected] = useState<boolean>(false);
 
   // Drag & drop reorder state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -127,9 +123,8 @@ export function App() {
     setSystems(updated);
   };
 
-  // Open Edit for specific system
   const handleOpenEdit = (_system?: WaatehSystem) => {
-    // In public view, editing is disabled and managed via /admin
+    // In public view, editing is managed via /admin
   };
 
   // CRUD operations
@@ -205,15 +200,6 @@ export function App() {
     setDragOverIndex(null);
   };
 
-  const handleGoToAdmin = () => {
-    try {
-      window.history.pushState({}, '', '/admin');
-    } catch {
-      window.location.hash = 'admin';
-    }
-    setIsAdminRoute(true);
-  };
-
   const handleBackToPortal = () => {
     try {
       window.history.pushState({}, '', '/');
@@ -267,24 +253,30 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100/60 text-slate-800 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900">
-      {/* 1. Header with Official Waateh Logo and zero buttons */}
-      <Header />
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900">
+      {/* 1. Clean Top Header with Official Waateh Logo (Zero Buttons) */}
+      <header className="w-full bg-white border-b border-slate-200/80 px-4 sm:px-8 py-3 flex items-center justify-between shadow-2xs select-none">
+        <img
+          src="/logo-wateh.png"
+          alt="واته"
+          className="h-10 sm:h-12 w-auto object-contain cursor-default"
+        />
+      </header>
 
-      {/* 2. Main Dashboard: Full-bleed Edge-to-Edge 2x2 Grid for Maximum Screen Presence */}
-      <main className="flex-1 w-full px-2 sm:px-3 md:px-4 py-2 sm:py-3 flex flex-col">
+      {/* 2. Main 2x2 Edge-to-Edge Grid filling large monitors */}
+      <main className="flex-1 w-full px-3 sm:px-6 py-5 flex flex-col">
         {isLoading ? (
-          <div className="h-[60vh] flex flex-col items-center justify-center text-slate-400 gap-3">
-            <RefreshCw className="w-8 h-8 animate-spin text-amber-600" />
-            <p className="text-sm font-medium">در حال بارگذاری سامانه‌های یکپارچه واته...</p>
+          <div className="h-[70vh] flex flex-col items-center justify-center text-slate-400 gap-3">
+            <RefreshCw className="w-8 h-8 animate-spin text-amber-500" />
+            <p className="text-sm font-medium text-slate-600">در حال بارگذاری سامانه‌ها...</p>
           </div>
         ) : systems.length === 0 ? (
-          <div className="h-[50vh] flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl border border-dashed border-slate-300">
+          <div className="h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl border border-slate-200">
             <Building2 className="w-12 h-12 text-slate-400 mb-3" />
             <h3 className="text-base font-bold text-slate-700">سامانه‌ای ثبت نشده است</h3>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 w-full flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 w-full flex-1">
             {systems.map((system, idx) => (
               <div 
                 key={system.id}
@@ -293,12 +285,12 @@ export function App() {
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDrop={(e) => handleDrop(e, idx)}
                 onDragEnd={handleDragEnd}
-                className={`w-full h-full min-h-[460px] xl:min-h-[520px] 2xl:min-h-[600px] flex rounded-2xl transition-all duration-200 ${
+                className={`w-full min-h-[460px] xl:min-h-[520px] 2xl:min-h-[580px] flex rounded-3xl transition-all duration-300 ${
                   draggedIndex === idx
-                    ? 'opacity-40 scale-[0.98] ring-2 ring-dashed ring-amber-500'
+                    ? 'opacity-40 scale-[0.99] ring-2 ring-dashed ring-amber-500'
                     : dragOverIndex === idx
                     ? 'ring-4 ring-amber-500/80 scale-[1.01] shadow-2xl z-20'
-                    : 'hover:shadow-md'
+                    : ''
                 }`}
               >
                 <SystemCard
@@ -314,19 +306,7 @@ export function App() {
         )}
       </main>
 
-      {/* 3. Slim Edge-to-Edge Footer */}
-      <footer className="w-full bg-white/80 border-t border-slate-200/80 py-1.5 px-4 text-center text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-700">پرتال سازمانی واته</span>
-          <span>&mdash;</span>
-          <span>سامانه متمرکز پایش عملیاتی</span>
-        </div>
-        <div className="text-[10px] text-slate-400 font-mono">
-          Waateh Enterprise Systems
-        </div>
-      </footer>
-
-      {/* 4. Fullscreen View Modal */}
+      {/* 3. Fullscreen View Modal */}
       <FullscreenModalViewer
         system={fullscreenSystem}
         onClose={() => setFullscreenSystem(null)}
