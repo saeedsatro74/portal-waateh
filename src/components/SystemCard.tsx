@@ -12,12 +12,13 @@ import {
   Sparkles,
   Layers,
   ShieldCheck,
-  LayoutDashboard
+  LayoutDashboard,
+  GripVertical
 } from 'lucide-react';
 
 interface SystemCardProps {
   system: WaatehSystem;
-  aspectRatio: GridAspectRatio;
+  aspectRatio?: GridAspectRatio;
   onOpenFullscreen: (system: WaatehSystem) => void;
   onOpenEdit: (system: WaatehSystem) => void;
   onSaveUrl: (id: string, url: string) => Promise<void>;
@@ -112,11 +113,17 @@ export const SystemCard: React.FC<SystemCardProps> = ({
   }
 
   return (
-    <div className="w-full h-full min-h-[380px] flex flex-col bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden hover:shadow-md transition-shadow group relative">
+    <div className="w-full h-full min-h-[460px] xl:min-h-[520px] 2xl:min-h-[580px] flex flex-col bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden hover:shadow-md transition-shadow group relative">
       {/* Top Header Bar of the Box */}
       <div className="px-4 py-2.5 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between z-20 select-none">
-        {/* Right side: Icon, Title & Category */}
-        <div className="flex items-center gap-2.5 min-w-0">
+        {/* Right side: Drag Handle, Icon, Title & Category */}
+        <div className="flex items-center gap-2 min-w-0">
+          <div 
+            className="p-1 -mr-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 cursor-grab active:cursor-grabbing transition shrink-0"
+            title="برای جابجایی جایگاه سامانه با موس بکشید و رها کنید (Drag & Drop)"
+          >
+            <GripVertical className="w-4 h-4" />
+          </div>
           <div 
             className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-xs"
             style={{ 
